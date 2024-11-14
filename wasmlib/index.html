@@ -1,0 +1,77 @@
+<html>
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>
+    <script type="module">
+        const mainWorker = new Worker("./main.js", { type: "module" });
+        const dbWorker = new Worker("./db.js", { type: "module" });
+        const inputBuffer = new SharedArrayBuffer(4 + (1 << 20));
+        const outputBuffer = new SharedArrayBuffer(4 + (1 << 20));
+        window.init = async () => {
+            mainWorker.postMessage({
+                input: inputBuffer,
+                output: outputBuffer
+            });
+            dbWorker.postMessage({
+                input: inputBuffer,
+                output: outputBuffer
+            });
+            mainWorker.postMessage({
+                command: "Init"
+            })
+        }
+        window.mainWorker = mainWorker;
+
+        mainWorker.onmessage = evt => {
+            alert(JSON.stringify(evt.data));
+        }
+        window.addRecord = () => {
+            mainWorker.postMessage({
+                command: "AddRecord", name: $("#username-input").val(), email: $("#email-input").val()
+            })
+        }
+        window.getRecord = () => {
+            mainWorker.postMessage({
+                command: "GetRecord", id: parseInt($("#id-input").val())
+            })
+        }
+    </script>
+</head>
+
+<body>
+    <div style="margin-top: 10%;margin-left: 10%;margin-right: 10%;">
+        <button class="ui button" onclick="init()">Initialize workers</button>
+        <div class="ui divider"></div>
+        <div class="ui header">
+            <h1>Add record</h1>
+        </div>
+        <div class="ui form">
+            <div class="field">
+                <label>Email</label>
+                <input id="email-input">
+            </div>
+            <div class="field">
+                <label>Username</label>
+                <input id="username-input">
+            </div>
+            <button class="ui button" onclick="addRecord()">Add record</button>
+        </div>
+        <div class="ui divider"></div>
+        <div class="ui header">
+            <h1>Get record</h1>
+        </div>
+        <div class="ui form">
+
+            <div class="field">
+                <label>Id</label>
+                <input id="id-input">
+            </div>
+            <button class="ui button" onclick="getRecord()">Get record</button>
+        </div>
+
+    </div>
+</body>
+
+</html>
